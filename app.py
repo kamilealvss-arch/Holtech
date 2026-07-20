@@ -13,57 +13,208 @@ if 'erros_validacao' not in st.session_state:
     st.session_state['erros_validacao'] = None
 
 st.set_page_config(
-    page_title="Validador Webfopag | Pré-ETL Pentaho",
-    page_icon="📊",
+    page_title="Holtech",
+    page_icon="logo.png",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
+
 )
 
 st.markdown('''
 <style>
-    .reportview-container .main .block-container { max-width: 1200px; }
+   
+    [data-testid="stMainBlockContainer"], .stMainBlockContainer {
+        padding-top: 15px !important;
+        max-width: 1300px !important;
+    }
+   
+    
+    .top-right-logo {
+            position: absolute;
+        top: 12px;
+        right: 120px;
+        z-index: 999999;
+    }
+
+    .corporate-header-container {
+        background-color: #1E2E3E;
+        padding: 35px 40px;
+        margin-bottom: 35px;
+        border-bottom: 4px solid #8CB1D4;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+   
+    .header-text-group {
+        display: flex;
+        flex-direction: column;
+    }
+   
+    /* ESCRITA PRINCIPAL */
+    .brand-text {
+        color: #FFFFFF !important;
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        font-size: 2.3em !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.2;
+    }
+
+
+    /* SUBTÍTULO*/
+    .brand-subtitle {
+        color: #CBD5E1 !important;
+        font-size: 1.05em !important;
+        margin-top: 8px !important;
+            font-weight: 400;
+    }
+   
+    /* Crachá de Versão */
+    .system-badge {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #E2E8F0;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.85em;
+        font-family: monospace;
+        letter-spacing: 0.5px;
+        border: 1px solid rgba(255,255,255,0.1);
+        white-space: nowrap;
+    }
+   
+    /* Cards Executivos de Inconsistências */
     .kpi-card {
         background-color: #ffffff;
-        border-top: 4px solid #dc3545;
-        padding: 15px 20px;
+        padding: 16px 20px;
+        border-radius: 6px;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid #1E2E3E;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        margin-bottom: 15px;
+    }
+    .kpi-title {
+        font-size: 0.82em;
+        color: #64748B;
+        font-weight: 700;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .kpi-value {
+        font-size: 2.1em;
+        font-weight: 700;
+        color: #1E2E3E;
+        margin: 0;
+    }
+   
+    /* Customização dos Inputs de Arquivo */
+    .stFileUploader {
+            background-color: #FFFFFF;
+        padding: 15px;
         border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid #E2E8F0;
     }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+
+
+    /* Botão de Execução */
+    div.stButton > button:first-child {
+        background-color: #1E2E3E !important;
+        color: white !important;
+        border-radius: 6px !important;
+        border: none !important;
+        padding: 12px 24px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px;
+        box-shadow: 0 2px 5px rgba(30,46,62,0.15) !important;
     }
-    .kpi-title { font-size: 0.95em; color: #495057; font-weight: 600; margin-bottom: 5px; }
-    .kpi-value { font-size: 2.2em; font-weight: 800; color: #dc3545; margin: 0; }
-    .title-banner { background-color: #0b1c2d; padding: 20px; border-radius: 10px; color: white; margin-bottom: 25px; }
+    div.stButton > button:first-child:hover {
+        background-color: #2C4156 !important;
+    }
+    /* RODAPÉ ESTÁTICO */
+    .corporate-footer {
+        width: 100%;
+        text-align: center;
+        padding: 30px 0 10px 0;
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        font-size: 0.85em;
+        color: #1E2E3E;
+        border-top: 1px solid rgba(140, 177, 212, 0.2);
+        margin-top: 50px;
+    }
+            /* Customização do Botão de Download Primário */
+    [data-testid="stDownloadButton"] button[kind="primary"] {
+        background-color: #1E2E3E !important; /* O mesmo azul escuro da sua header */
+        color: white !important;
+        border-radius: 6px !important;
+        border: none !important;
+        padding: 12px 24px !important;
+        font-weight: 600 !important;
+    }
+    
+    [data-testid="stDownloadButton"] button[kind="primary"]:hover {
+        background-color: #2C4156 !important; /* Um tom ligeiramente mais claro para o hover */
+        border-color: #2C4156 !important;
+        color: white !important;
+    }
+    
+
 </style>
 ''', unsafe_allow_html=True)
 
-st.markdown('<div class="title-banner"><h1>🔍 Data Quality Check — Implantação Webfopag</h1><p style="font-size: 1.1em;">Pré-validação de dados para evitar falhas e alertas de erro no processo de carga (ETL Pentaho).</p></div>', unsafe_allow_html=True)
+logo_floating_container = st.container()
+with logo_floating_container:
+
+
+    st.markdown('<div class="top-right-logo">', unsafe_allow_html=True)
+    try:
+        st.image('holtech.png', width=200)
+    except:
+        
+        st.markdown('<div style="background: #1E2E3E; color: #8CB1D4; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #8CB1D4;">HOLTECH LOGO</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('''
+<div class="corporate-header-container">
+    <div class="header-text-group">
+        <div class="brand-text">Módulos de Entrada de Dados</div>
+        <div class="brand-subtitle">Insira as planilhas extraídas dos sistemas de origem para auditoria estrita de esquemas antes da carga Pentaho.</div>
+    </div>
+    <div>
+        <span class="system-badge">HOLTECH </span>
+    </div>
+</div>
+''', unsafe_allow_html=True)
+
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.subheader("1. Holerites 📄")
-    file_holerite = st.file_uploader("Arquivo HOLERITE_SEM_CV", type=["xlsx", "xls", "csv"], key="holerite")
+    st.markdown("**1. Arquivo de Holerites**")
+    file_holerite = st.file_uploader("HOLERITE_SEM_CV", type=["xlsx", "xls", "csv"], key="holerite", label_visibility="collapsed")
+
 
 with col2:
-    st.subheader("2. De-Para 🔄")
-    file_depara = st.file_uploader("Arquivo TAB_DEPARA", type=["xlsx", "xls", "csv"], key="depara")
+    st.markdown("**2. Arquivo De-Para**")
+    file_depara = st.file_uploader("TAB_DEPARA", type=["xlsx", "xls", "csv"], key="depara", label_visibility="collapsed")
+
 
 with col3:
-    st.subheader("3. Funcionários 👥")
-    file_funcionarios = st.file_uploader("Relatório Funcionários (PRD)", type=["xlsx", "xls", "csv"], key="func")
+    st.markdown("**3. Relatório de Funcionários**")
+    file_funcionarios = st.file_uploader("Funcionários (PRD)", type=["xlsx", "xls", "csv"], key="func", label_visibility="collapsed")
 
-st.markdown("---")
+st.markdown("<br>", unsafe_allow_html=True)
 
-if st.button("🚀 Executar Validação de Qualidade", use_container_width=True, type="primary"):
+if st.button("Executar Auditoria de Dados", use_container_width=True, type="primary"):
     if not (file_holerite and file_depara and file_funcionarios):
-        st.error("⚠️ Atenção: Para executar a validação, é obrigatório anexar os três arquivos.")
+        st.error("⚠️ Erro de Protocolo: Todos os três arquivos mapeados são obrigatórios para a execução do cruzamento de integridade.")
         st.session_state['erros_validacao'] = None
     else:
-        with st.spinner("Engrenagens girando... Executando sanitização, cruzamento de dados e validações de negócio..."):
+        with st.spinner("Analisando..."):
             df_erros, msg_erro_critico = validar_planilhas(file_holerite, file_depara, file_funcionarios)
             
             if msg_erro_critico:
@@ -71,7 +222,7 @@ if st.button("🚀 Executar Validação de Qualidade", use_container_width=True,
                 st.session_state['erros_validacao'] = None
             elif df_erros is None or df_erros.empty:
                 st.session_state['erros_validacao'] = []
-                st.balloons()
+                st.toast("Sucesso! Nenhuma inconsistência detectada.", icon="✅")
             else:
                 st.session_state['erros_validacao'] = df_erros
                     
@@ -94,15 +245,15 @@ if st.session_state['erros_validacao'] is not None:
         
     else:
         total_erros = len(df_erros)
-        st.warning(f"⚠️ Atenção! Foram encontradas **{total_erros}** inconsistências que bloqueariam a carga no Pentaho.")
+        st.warning(f"⚠️ Atenção! Foram encontrados **{total_erros}** pontos críticos de falha estrutural.")
         
         # ----------------------------------------------------------------------
         # CARDS DE RESUMO EXECUTIVO
         # ----------------------------------------------------------------------
-        st.subheader("📊 Resumo de Erros por Categoria")
+        st.markdown("### Indicadores de Desvio")
         coluna_tipo = "Tipo de Erro" if "Tipo de Erro" in df_erros.columns else df_erros.columns[0]
         erros_por_tipo = df_erros[coluna_tipo].value_counts()
-        
+       
         cols = st.columns(min(len(erros_por_tipo), 4))
         for i, (tipo_erro, qtd) in enumerate(erros_por_tipo.items()):
             with cols[i % 4]:
@@ -113,12 +264,10 @@ if st.session_state['erros_validacao'] is not None:
                 </div>
                 ''', unsafe_allow_html=True)
         
-        st.markdown("---")
-        
         # ----------------------------------------------------------------------
         # FILTRO E PRÉ-VISUALIZAÇÃO DETALHADA
         # ----------------------------------------------------------------------
-        st.markdown("### 📋 Pré-Visualização Detalhada")
+        st.markdown("### Registro Analítico de Inconsistências")
         
         categoria = st.selectbox(
             "Filtre pela categoria do erro:",
@@ -153,7 +302,7 @@ if st.session_state['erros_validacao'] is not None:
         if not df_exibir.empty:
             if categoria == "Holerites":
                 st.markdown("---")
-                st.markdown("### 📥 Exportar Planilha de Holerite Corrigida")
+                st.markdown("### Exportar Planilha de Holerite (erros em vermelho)")
             
             if categoria == "Holerites":
                 arquivo_original = file_holerite
@@ -519,7 +668,7 @@ if st.session_state['erros_validacao'] is not None:
                  excel_data = output.getvalue()
                  
                  st.download_button(
-                     label=f"📊 Baixar {categoria} Corrigido ({celulas_pintadas} marcações realizadas)",
+                     label=f" Baixar {categoria} Corrigido ({celulas_pintadas} marcações realizadas)",
                      data=excel_data,
                      file_name=nome_arquivo_saida,
                      mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -530,3 +679,9 @@ if st.session_state['erros_validacao'] is not None:
 
              except Exception as e:
                  st.error(f"Erro ao processar arquivo Excel: {e}")
+
+                 st.markdown(f'''
+<div class="corporate-footer">
+    © {datetime.datetime.now().year} ©Holtech Solução Rápida. | Todos os direitos reservados.
+</div>
+''', unsafe_allow_html=True)
