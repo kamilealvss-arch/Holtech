@@ -574,39 +574,27 @@ if st.session_state['erros_validacao'] is not None:
                              if val_raw is None or val_real_excel == "":
                                  marcar_erro = True
                              elif isinstance(val_raw, (int, float)):
-                                 # Se for número nativo do Excel (ex: digitou 153,41), já está validado!
-                                 val_arred = round(float(val_raw), 2)
-                                 if val_arred in [4235.28, 6009.92]:
+                                 marcar_erro = False
+                                 # Erro se tiver mais de 2 casas decimais (ex: 432,057)
+                                 texto_decimal = f"{float(val_raw):.10f}".rstrip('0').rstrip('.')
+                                 parte_decimal = texto_decimal.split('.')[1] if '.' in texto_decimal else ''
+                                 if len(parte_decimal) > 2:
                                      marcar_erro = True
-                                 else:
-                                     marcar_erro = False
+                                 # Erro se a célula foi formatada com separador de milhar
+                                 # (o código de formatação do Excel usa "," para indicar
+                                 # agrupamento, ex: "#,##0.00", independente do idioma exibido)
+                                 elif re.search(r'#,#{1,3}0', formato_da_celula):
+                                     marcar_erro = True
                              else:
                                  # Cai aqui apenas se for lido como texto no Excel (ex: "908.85")
                                  val_cru_texto = str(val_raw).strip()
                                  if "/" in val_cru_texto or ":" in val_cru_texto:
                                      marcar_erro = True
-                                 elif "." in val_cru_texto and "," in val_cru_texto:
-                                     marcar_erro = True
                                  elif "." in val_cru_texto:
-                                     partes = val_cru_texto.split('.')
-                                     if len(partes) == 2 and partes[0].isdigit() and partes[1] == '0':
-                                         pass
-                                     else:
-                                         marcar_erro = True
-                                 
-                                 # A REGEX SÓ RODA SE FOR TEXTO (Isso resolve o bug de pintar as linhas erradas)
-                                 if not marcar_erro:
-                                     texto_validar = val_cru_texto
-                                     if re.fullmatch(r'\d+\.\d+', texto_validar):
-                                         if texto_validar.endswith('.0'):
-                                             texto_validar = texto_validar[:-2]
-                                         else:
-                                             texto_validar = texto_validar.replace('.', ',')
-                                     
-                                     if not re.fullmatch(r"\d+(,\d+)?", texto_validar):
-                                         marcar_erro = True
-                                     elif texto_validar in ["4235,28", "6009,92"]:
-                                         marcar_erro = True
+                                     # Ponto não é permitido em nenhuma posição
+                                     marcar_erro = True
+                                 elif not re.fullmatch(r"\d+(,\d{1,2})?", val_cru_texto):
+                                     marcar_erro = True
 
                          # 7. PERCENTUAL_VERBA
                          elif cabecalho == 'PERCENTUAL_VERBA':

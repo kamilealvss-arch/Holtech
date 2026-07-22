@@ -153,9 +153,11 @@ def validate_numeric_format(val, col_name):
     if isinstance(val, (int, float)):
         val_float = float(val)
         if col_name == "VALOR_VERBA":
-            val_arredondado = round(val_float, 2)
-            if val_arredondado in [4235.28, 6009.92]:
-                return False, None, f"O valor '{val}' é inválido."
+            # Erro se tiver mais de 2 casas decimais (ex: 432.057)
+            texto_decimal = f"{val_float:.10f}".rstrip('0').rstrip('.')
+            parte_decimal = texto_decimal.split('.')[1] if '.' in texto_decimal else ''
+            if len(parte_decimal) > 2:
+                return False, None, f"O campo VALOR_VERBA com valor '{val}' possui mais de duas casas decimais."
         return True, val_float, None
 
     val_str = str(val).strip()
@@ -166,26 +168,14 @@ def validate_numeric_format(val, col_name):
     if col_name == "VALOR_VERBA":
         if "/" in val_str or ":" in val_str:
             return False, None, f"O campo VALOR_VERBA possui caracteres inválidos: '{val_str}'."
-            
-        # Rejeita se tiver ponto e vírgula ao mesmo tempo (ex: "4.235,28")
-        if "." in val_str and "," in val_str:
-            return False, None, f"O campo VALOR_VERBA não pode conter pontos de milhar: '{val_str}'."
 
-        # Se contiver apenas ponto e não for o float padrão do python, dá erro (ex: "908.85")
+        # Não pode conter ponto em hipótese alguma (nem separador de milhar, nem decimal com ponto)
         if "." in val_str:
-            partes = val_str.split('.')
-            if len(partes) == 2 and partes[0].isdigit() and partes[1].isdigit():
-                val_str = val_str.replace('.', ',')
-                if val_str.endswith(',0'):
-                    val_str = val_str[:-2]
-            else:
-                return False, None, f"O campo VALOR_VERBA não pode conter pontos '.': '{val_str}'."
+            return False, None, f"O campo VALOR_VERBA não pode conter pontos '.': '{val_str}'."
 
-        if not re.fullmatch(r"\d+(,\d+)?", val_str):
-            return False, None, f"O campo VALOR_VERBA deve conter apenas números inteiros ou decimais com vírgula: '{val_str}'."
-            
-        if val_str in ["4235,28", "6009,92"]:
-            return False, None, f"O valor '{val_str}' é inválido."
+        # Só pode ter, no máximo, uma vírgula, seguida de 1 ou 2 dígitos decimais
+        if not re.fullmatch(r"\d+(,\d{1,2})?", val_str):
+            return False, None, f"O campo VALOR_VERBA deve ser um número inteiro ou decimal com vírgula, com no máximo 2 casas decimais: '{val_str}'."
 
         try:
             val_float = float(val_str.replace(",", "."))
@@ -328,9 +318,16 @@ def validar_planilhas(file_holerite, file_depara, file_funcionarios):
     except Exception as e:
         return None, f"Erro crítico ao processar os arquivos. {str(e)}"
 
-    # 2. Tratamento de limpeza (mantido, mas garantindo que lidamos com strings)
+   # 2. Tratamento de limpeza (mantido, mas garantindo que lidamos com strings)
+    # IMPORTANTE: a coluna VALOR_VERBA NÃO pode ser convertida para string aqui.
+    # Se a célula do Excel já é um número nativo (ex: 153.41), o str() do Python
+    # usa PONTO como separador decimal, e isso fazia a validação marcar
+    # valores corretos (ex: 153,41) como erro.
+    colunas_numericas_preservar = {'valor_verba'}
     for df in [df_hol, df_dep, df_fun]:
         for col in df.columns:
+            if normalizar_coluna(col) in colunas_numericas_preservar:
+                continue
             # Converte para string apenas para o strip(), mantendo o tipo original preservado nas células
             df[col] = df[col].apply(lambda x: str(x).strip() if pd.notnull(x) else x)
     # 2. Mapeamento Robusto de Colunas
