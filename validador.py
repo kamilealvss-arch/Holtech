@@ -307,6 +307,7 @@ def tratar_dados_para_comparacao(df, coluna_cpf=None, coluna_cnpj=None, coluna_d
 
 def validar_planilhas(file_holerite, file_depara, file_funcionarios):
     erros = []
+    avisos = []
     
     # 1. Leitura Inteligente de Arquivos
     try:
@@ -316,7 +317,7 @@ def validar_planilhas(file_holerite, file_depara, file_funcionarios):
         df_dep = pd.read_excel(file_depara, dtype=object) if file_depara.name.endswith(('.xlsx', '.xls')) else pd.read_csv(file_depara, dtype=object)
         df_fun = pd.read_excel(file_funcionarios, dtype=object) if file_funcionarios.name.endswith(('.xlsx', '.xls')) else pd.read_csv(file_funcionarios, dtype=object)
     except Exception as e:
-        return None, f"Erro crítico ao processar os arquivos. {str(e)}"
+        return None, None, f"Erro crítico ao processar os arquivos. {str(e)}"
 
    # 2. Tratamento de limpeza (mantido, mas garantindo que lidamos com strings)
     # IMPORTANTE: a coluna VALOR_VERBA NÃO pode ser convertida para string aqui.
@@ -366,7 +367,7 @@ def validar_planilhas(file_holerite, file_depara, file_funcionarios):
     # Verificação de colunas críticas
     missing_hol = [v for k, v in map_hol_expected.items() if k not in col_hol and k in ['cpf', 'matricula', 'codigo_verba']]
     if missing_hol:
-        return None, f"Erro Crítico: Colunas obrigatórias não encontradas no HOLERITE_SEM_CV: {', '.join(missing_hol)}."
+        return None, None, f"Erro Crítico: Colunas obrigatórias não encontradas no HOLERITE_SEM_CV: {', '.join(missing_hol)}."
 
     # 3. Preparando Dicionários para Cruzamento de Dados
     dict_depara = {}
@@ -632,4 +633,19 @@ def validar_planilhas(file_holerite, file_depara, file_funcionarios):
                                 "Descrição": d + extra_info
                             })
 
-    return pd.DataFrame(erros) if erros else pd.DataFrame(), None
+                        # AVISO (não é erro): o CPF possui mais de um cadastro no sistema.
+                        # É esperado em alguns casos (funcionário com múltiplos registros),
+                        # por isso é sinalizado em amarelo, apenas na coluna CPF.
+                        if len(candidatos) > 1:
+                            avisos.append({
+                                "Planilha": "HOLERITE_SEM_CV", "Linha Excel": linha_xls, "Identificador": ident,
+                                "Tipo de Aviso": "Múltiplos registros para o mesmo CPF",
+                                "Descrição": f"O CPF '{h_cpf_raw}' possui mais de um cadastro no sistema de Funcionários. O registro mais próximo foi utilizado na comparação, vale checar manualmente.",
+                                "Coluna": "CPF"
+                            })
+
+    return (
+        pd.DataFrame(erros) if erros else pd.DataFrame(),
+        pd.DataFrame(avisos) if avisos else pd.DataFrame(),
+        None
+    )

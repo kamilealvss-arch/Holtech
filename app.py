@@ -12,6 +12,9 @@ from openpyxl.comments import Comment
 if 'erros_validacao' not in st.session_state:
     st.session_state['erros_validacao'] = None
 
+if 'avisos_validacao' not in st.session_state:
+    st.session_state['avisos_validacao'] = None
+
 st.set_page_config(
     page_title="Holtech",
     page_icon="logo.png",
@@ -215,16 +218,19 @@ if st.button("Executar Auditoria de Dados", use_container_width=True, type="prim
         st.session_state['erros_validacao'] = None
     else:
         with st.spinner("Analisando..."):
-            df_erros, msg_erro_critico = validar_planilhas(file_holerite, file_depara, file_funcionarios)
+            df_erros, df_avisos, msg_erro_critico = validar_planilhas(file_holerite, file_depara, file_funcionarios)
             
             if msg_erro_critico:
                 st.error(msg_erro_critico)
                 st.session_state['erros_validacao'] = None
+                st.session_state['avisos_validacao'] = None
             elif df_erros is None or df_erros.empty:
                 st.session_state['erros_validacao'] = []
+                st.session_state['avisos_validacao'] = df_avisos
                 st.toast("Sucesso! Nenhuma inconsistência detectada.", icon="✅")
             else:
                 st.session_state['erros_validacao'] = df_erros
+                st.session_state['avisos_validacao'] = df_avisos
                     
 # ==============================================================================
 # EXIBIÇÃO DOS RESULTADOS E FILTROS (Fora do botão, lendo da memória)
@@ -235,6 +241,10 @@ if st.session_state['erros_validacao'] is not None:
         df_erros = dados_memoria[0]
     else:
         df_erros = dados_memoria
+
+    df_avisos = st.session_state.get('avisos_validacao')
+    if df_avisos is not None and not isinstance(df_avisos, pd.DataFrame):
+        df_avisos = pd.DataFrame(df_avisos)
         
     import pandas as pd
     if not isinstance(df_erros, pd.DataFrame):
@@ -650,6 +660,27 @@ if st.session_state['erros_validacao'] is not None:
                                  f"Formato inválido para {cabecalho}. Verifique a regra desta coluna.",
                                  "Validador Webfopag"
                              )
+
+                 # ==================================================================
+                 # 3. PINTA OS AVISOS (AMARELO) - Múltiplos registros para o mesmo CPF
+                 # Não é erro, é apenas um sinal de atenção; por isso nunca sobrescreve
+                 # uma célula que já esteja marcada em vermelho.
+                 # ==================================================================
+                 yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+                 if categoria == "Holerites" and df_avisos is not None and not df_avisos.empty and 'CPF' in cabecalhos_excel:
+                     idx_col_cpf = cabecalhos_excel['CPF']
+                     for _, aviso in df_avisos.iterrows():
+                         try:
+                             num_linha_aviso = int(aviso.get('Linha Excel'))
+                         except (ValueError, TypeError):
+                             continue
+                         if 2 <= num_linha_aviso <= ws.max_row:
+                             celula_aviso = ws.cell(row=num_linha_aviso, column=idx_col_cpf)
+                             if celula_aviso.fill != red_fill:
+                                 celula_aviso.fill = yellow_fill
+                                 celulas_pintadas += 1
+                             if not celula_aviso.comment:
+                                 celula_aviso.comment = Comment(str(aviso.get('Descrição', '')), "Validador Webfopag")
 
                  output = io.BytesIO()
                  wb.save(output)
