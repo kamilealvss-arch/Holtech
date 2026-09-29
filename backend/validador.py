@@ -5,6 +5,7 @@ import unicodedata
 
 import openpyxl
 from openpyxl.styles import PatternFill
+from openpyxl.comments import Comment
 import io
 
 
@@ -158,7 +159,11 @@ def validate_numeric_format(val, col_name):
             parte_decimal = texto_decimal.split('.')[1] if '.' in texto_decimal else ''
             if len(parte_decimal) > 2:
                 return False, None, f"O campo VALOR_VERBA com valor '{val}' possui mais de duas casas decimais."
-        return True, val_float, None
+            return True, val_float, None
+        elif col_name == "QUANTIDADE_REFERENCIA":
+            return True, val_float, None
+        else:
+            return True, val_float, None
 
     val_str = str(val).strip()
     
@@ -206,6 +211,24 @@ def validate_numeric_format(val, col_name):
             return True, float(val_str.replace(",", ".")), None
         except ValueError:
             return False, None, f"Valor inválido para PERCENTUAL_VERBA: '{val_str}'."
+
+    # -------------------------------------------------------------
+    # REGRA EXCLUSIVA PARA QUANTIDADE_REFERENCIA
+    # -------------------------------------------------------------
+    elif col_name == "QUANTIDADE_REFERENCIA":
+        # 1. Erro se contiver ponto '.' (ex: 1.000 ou 1.000,00)
+        if "." in val_str:
+            return False, None, f"O campo QUANTIDADE_REFERENCIA não pode conter pontos '.': '{val_str}'."
+
+        # 2. Erro se contiver caracteres especiais ou formato inválido (ex: 30:00, letras, barras)
+        # Aceita números inteiros (-?\d+) e decimais com vírgula (-?\d+,\d+)
+        if not re.fullmatch(r'-?\d+(?:,\d+)?', val_str):
+            return False, None, f"O campo QUANTIDADE_REFERENCIA possui formato inválido ou caracteres especiais: '{val_str}'."
+
+        try:
+            return True, float(val_str.replace(',', '.')), None
+        except ValueError:
+            return False, None, f"Valor inválido para QUANTIDADE_REFERENCIA: '{val_str}'."
 
     # -------------------------------------------------------------
     # REGRA PARA OUTRAS COLUNAS
@@ -310,14 +333,33 @@ def validar_planilhas(file_holerite, file_depara, file_funcionarios):
     avisos = []
     
     # 1. Leitura Inteligente de Arquivos
+    def ler_planilha_inteligente(arquivo, colunas_chave, nome_arquivo):
+        if arquivo.name.endswith(('.xlsx', '.xls')):
+            xls = pd.ExcelFile(arquivo)
+            aba_alvo = None
+
+            for aba in xls.sheet_names:
+                df_temp = pd.read_excel(xls, sheet_name=aba, nrows=0)
+                cabecalhos_str = " ".join([normalizar_coluna(c) for c in df_temp.columns])
+
+                # Checa se todas as palavras-chave estão contidas nos nomes normalizados das colunas
+                if all(palavra in cabecalhos_str for palavra in colunas_chave):
+                    aba_alvo = aba
+                    break
+
+            if aba_alvo is None:
+                raise ValueError(f"Não foi possível localizar uma aba contendo as colunas obrigatórias no arquivo: {nome_arquivo}")
+
+            return pd.read_excel(xls, sheet_name=aba_alvo, dtype=object)
+        else:
+            return pd.read_csv(arquivo, dtype=object)
+
     try:
-        # Usamos dtype=object para preservar o tipo original do dado (float, int, etc.)
-        # Isso evita que o Pandas force números decimais como 153,41 para o formato "153.41" (string com ponto)
-        df_hol = pd.read_excel(file_holerite, dtype=object) if file_holerite.name.endswith(('.xlsx', '.xls')) else pd.read_csv(file_holerite, dtype=object)
-        df_dep = pd.read_excel(file_depara, dtype=object) if file_depara.name.endswith(('.xlsx', '.xls')) else pd.read_csv(file_depara, dtype=object)
-        df_fun = pd.read_excel(file_funcionarios, dtype=object) if file_funcionarios.name.endswith(('.xlsx', '.xls')) else pd.read_csv(file_funcionarios, dtype=object)
+        df_hol = ler_planilha_inteligente(file_holerite, ['cpf', 'matricula', 'codigo'], "HOLERITE")
+        df_dep = ler_planilha_inteligente(file_depara, ['cliente', 'wfp'], "DE-PARA")
+        df_fun = ler_planilha_inteligente(file_funcionarios, ['cpf'], "FUNCIONÁRIOS")
     except Exception as e:
-        return None, None, f"Erro crítico ao processar os arquivos. {str(e)}"
+        return None, None, f"Erro Crítico: {str(e)}"
 
    # 2. Tratamento de limpeza (mantido, mas garantindo que lidamos com strings)
     # IMPORTANTE: a coluna VALOR_VERBA NÃO pode ser convertida para string aqui.
@@ -649,3 +691,293 @@ def validar_planilhas(file_holerite, file_depara, file_funcionarios):
         pd.DataFrame(avisos) if avisos else pd.DataFrame(),
         None
     )
+
+
+def colorir_excel_holerite(file_original, df_erros, df_avisos):
+    """
+    Abre o arquivo original de holerites, pinta em vermelho as células com erro e em
+    amarelo as com aviso, insere comentários do Excel com as descrições e retorna
+    os bytes do arquivo .xlsx gerado e o total de células marcadas.
+    """
+    file_original.seek(0)
+    wb = openpyxl.load_workbook(file_original)
+    ws = None
+
+    for aba in wb.worksheets:
+        cabecalhos = [str(aba.cell(row=1, column=col).value).strip() for col in range(1, aba.max_column + 1)]
+        cabecalhos_norm = [unicodedata.normalize('NFKD', c).encode('ASCII', 'ignore').decode('utf-8').upper() for c in cabecalhos]
+
+        if any('CPF' in c for c in cabecalhos_norm) and any('MATRICULA' in c for c in cabecalhos_norm) and any('CODIGO' in c for c in cabecalhos_norm):
+            ws = aba
+            break
+
+    if ws is None:
+        raise ValueError("Não foi encontrada nenhuma aba com as colunas do holerite para pintar de vermelho.")
+
+    red_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+    yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    
+    cabecalhos_excel = {str(ws.cell(row=1, column=col).value).strip().upper(): col for col in range(1, ws.max_column + 1)}
+    coluna_linha = 'Linha Excel' if 'Linha Excel' in df_erros.columns else ('linha' if 'linha' in df_erros.columns else df_erros.columns[0])
+    
+    col_filtro = 'Planilha' if 'Planilha' in df_erros.columns else ('planilha' if 'planilha' in df_erros.columns else df_erros.columns[0])
+    df_hol_erros = df_erros[df_erros[col_filtro].astype(str).str.upper().str.strip() == "HOLERITE_SEM_CV"]
+    
+    def encontrar_colunas_no_erro(texto_erro, cabecalhos):
+        colunas_encontradas = set()
+        def normalizar(t):
+            return "".join(c for c in unicodedata.normalize('NFD', t) if unicodedata.category(c) != 'Mn').upper()
+        texto_norm = normalizar(texto_erro)
+        if 'POSSIVEL FICHA DE REGISTRO' in texto_norm:
+            for cab in cabecalhos:
+                if normalizar(cab) in ('MATRICULA', 'NUMERO_MATRICULA'):
+                    return {cab}
+        for cab in cabecalhos:
+            cab_norm = normalizar(cab)
+            if re.search(r'\b' + re.escape(cab_norm) + r'\b', texto_norm):
+                colunas_encontradas.add(cab)
+        if not colunas_encontradas:
+            mapping = {
+                'DATA DE PAGAMENTO': ['DATA_PAGAMENTO'], 'DATA_PAGAMENTO': ['DATA_PAGAMENTO'], 'PAGAMENTO': ['DATA_PAGAMENTO'],
+                'TIPO DE FOLHA': ['TIPO_FOLHA'], 'TIPO_FOLHA': ['TIPO_FOLHA'],
+                'DEPENDENTES IRRF': ['QTDE_DEPENDENTES_IRRF'], 'QTDE_DEPENDENTES_IRRF': ['QTDE_DEPENDENTES_IRRF'],
+                'DEPENDENTES SF': ['QTDE_DEPENDENTES_SF'], 'QTDE_DEPENDENTES_SF': ['QTDE_DEPENDENTES_SF'],
+                'CODIGO DA VERBA': ['CODIGO_VERBA'], 'CODIGO DE VERBA': ['CODIGO_VERBA'], 'CODIGO_VERBA': ['CODIGO_VERBA'],
+                'DESCRICAO DA VERBA': ['DESCRICAO_VERBA'], 'DESCRICAO DE VERBA': ['DESCRICAO_VERBA'], 'DESCRICAO_VERBA': ['DESCRICAO_VERBA'],
+                'NATUREZA DA VERBA': ['NATUREZA_VERBA'], 'NATUREZA DE VERBA': ['NATUREZA_VERBA'], 'NATUREZA_VERBA': ['NATUREZA_VERBA'],
+                'PERCENTUAL DA VERBA': ['PERCENTUAL_VERBA'], 'PERCENTUAL DE VERBA': ['PERCENTUAL_VERBA'], 'PERCENTUAL_VERBA': ['PERCENTUAL_VERBA'],
+                'QUANTIDADE DE REFERENCIA': ['QUANTIDADE_REFERENCIA'], 'QUANTIDADE REFERENCIA': ['QUANTIDADE_REFERENCIA'], 'QUANTIDADE_REFERENCIA': ['QUANTIDADE_REFERENCIA'],
+                'VALOR DA VERBA': ['VALOR_VERBA'], 'VALOR DE VERBA': ['VALOR_VERBA'], 'VALOR_VERBA': ['VALOR_VERBA'],
+                'INCIDENCIA INSS': ['INCIDENCIA_INSS'], 'INCIDENCIA_INSS': ['INCIDENCIA_INSS'],
+                'INCIDENCIA IRRF': ['INCIDENCIA_IRRF'], 'INCIDENCIA_IRRF': ['INCIDENCIA_IRRF'],
+                'INCIDENCIA FGTS': ['INCIDENCIA_FGTS'], 'INCIDENCIA_FGTS': ['INCIDENCIA_FGTS'],
+                'ANO': ['ANO'], 'CPF': ['CPF'],
+                'MATRICULA': ['MATRICULA'], 'MATRÍCULA': ['MATRICULA'],
+                'DATA DE ADMISSAO': ['DATA_ADMISSAO'], 'DATA ADMISSAO': ['DATA_ADMISSAO'], 'DATA_ADMISSAO': ['DATA_ADMISSAO'], 'ADMISSAO': ['DATA_ADMISSAO'], 'ADMISSÃO': ['DATA_ADMISSÃO'],
+                'CNPJ': ['CNPJ_REGISTRO'], 'CNPJ_REGISTRO': ['CNPJ_REGISTRO'],
+                'MES': ['MES'], 'MÊS': ['MES'],
+            }
+            for keyword, cols in mapping.items():
+                key_norm = normalizar(keyword)
+                if key_norm in texto_norm:
+                    for col in cols:
+                        if col in cabecalhos_excel:
+                            colunas_encontradas.add(col)
+        return colunas_encontradas
+
+    celulas_pintadas = 0
+    
+    # 1. Pinta os erros identificados
+    for _, erro in df_hol_erros.iterrows():
+        val_linha = erro[coluna_linha]
+        num_linha = None
+        try:
+            num_linha = int(val_linha)
+        except (ValueError, TypeError):
+            identificador_busca = None
+            col_busca_idx = None
+            for campo_id in ['Matricula', 'Matrícula', 'CPF', 'CNPJ_REGISTRO', 'CNPJ']:
+                if campo_id in erro and pd.notna(erro[campo_id]):
+                    val_id = str(erro[campo_id]).strip()
+                    if val_id and val_id not in ['/', '-']:
+                        identificador_busca = val_id
+                        campo_norm = campo_id.upper().replace('Í', 'I')
+                        if campo_norm in cabecalhos_excel:
+                            col_busca_idx = cabecalhos_excel[campo_norm]
+                        elif 'MATRICULA' in cabecalhos_excel and 'MATR' in campo_norm:
+                            col_busca_idx = cabecalhos_excel['MATRICULA']
+                        elif 'CNPJ_REGISTRO' in cabecalhos_excel and 'CNPJ' in campo_norm:
+                            col_busca_idx = cabecalhos_excel['CNPJ_REGISTRO']
+                        break
+            if identificador_busca and col_busca_idx:
+                for r_scan in range(2, ws.max_row + 1):
+                    val_celula = str(ws.cell(row=r_scan, column=col_busca_idx).value).strip()
+                    val_celula_limpo = val_celula.replace('.', '').replace('-', '').replace('/', '')
+                    id_limpo = re.sub(r'[./-]', '', identificador_busca)
+                    if val_celula_limpo == id_limpo:
+                        num_linha = r_scan
+                        break
+        
+        if num_linha and 2 <= num_linha <= ws.max_row:
+            texto_erro = f"{erro.get('Tipo de Erro', '')} {erro.get('Descrição', '')}"
+            colunas_alvo = encontrar_colunas_no_erro(texto_erro, list(cabecalhos_excel.keys()))
+            if not colunas_alvo:
+                colunas_alvo = {list(cabecalhos_excel.keys())[0]}
+            for col_nome in colunas_alvo:
+                idx_col = cabecalhos_excel[col_nome]
+                celula_erro = ws.cell(row=num_linha, column=idx_col)
+                if celula_erro.fill != red_fill:
+                    celula_erro.fill = red_fill
+                    celulas_pintadas += 1
+                celula_erro.comment = Comment(texto_erro, "Validador Webfopag")
+                
+    # 2. Auditoria de formatação fina
+    for r in range(2, ws.max_row + 1):
+        for cabecalho, idx_col in cabecalhos_excel.items():
+            celula = ws.cell(row=r, column=idx_col)
+            val_raw = celula.value
+            val_real_excel = str(celula.value).strip() if celula.value is not None else ""
+            formato_da_celula = str(celula.number_format) if celula.number_format else ""
+            if val_raw is None:
+                val_str = ""
+            elif isinstance(val_raw, (datetime.datetime, datetime.date)):
+                val_str = val_raw.strftime('%Y-%m-%d')
+            elif isinstance(val_raw, (int, float)):
+                if cabecalho in ['CPF', 'CNPJ_REGISTRO', 'MATRICULA', 'CODIGO_VERBA', 'MES', 'ANO', 'TIPO_FOLHA', 'NATUREZA_VERBA']:
+                    val_str = str(int(round(val_raw)))
+                else:
+                    val_str = str(val_raw)
+            else:
+                val_str = str(val_raw).strip()
+            
+            marcar_erro = False
+            
+            # CPF
+            if cabecalho == 'CPF':
+                if val_str == "" or '.' in val_str or '-' in val_str or not re.match(r'^\d{11}$', val_str):
+                    marcar_erro = True
+            
+            # CNPJ_REGISTRO
+            elif cabecalho == 'CNPJ_REGISTRO':
+                if re.search(r'[./-]', val_str):
+                    marcar_erro = True
+                valor_limpo = re.sub(r'[^A-Z0-9]', '', val_str)
+                if len(valor_limpo) != 14:
+                    marcar_erro = True
+                elif valor_limpo.isdigit():
+                    if not validar_cnpj_alfanumerico(val_str):
+                        marcar_erro = True
+                    else:
+                        marcar_erro = False
+                else:
+                    marcar_erro = False
+            
+            # DATA
+            elif 'DATA_' in cabecalho or cabecalho in ['DATA_PAGAMENTO', 'DATA_ADMISSAO', 'DATA_NASCIMENTO']:
+                if celula.value is None or str(celula.value).strip() == "":
+                    marcar_erro = True
+                else:
+                    val_original = celula.value
+                    if isinstance(val_original, datetime.datetime):
+                        fmt = str(celula.number_format).lower()
+                        if '/' in fmt or fmt == 'mm-dd-yy':
+                            marcar_erro = True
+                        else:
+                            marcar_erro = False
+                    elif isinstance(val_original, str):
+                        texto = val_original.strip()
+                        if '/' in texto:
+                            marcar_erro = True
+                        elif not re.fullmatch(r"\d{4}-\d{2}-\d{2}", texto) and texto != "2000-01-01":
+                            marcar_erro = True
+                        else:
+                            marcar_erro = False
+                    else:
+                        marcar_erro = True
+                        
+            # ANO
+            elif cabecalho == 'ANO':
+                if not re.match(r'^\d{4}$', val_str):
+                    marcar_erro = True
+                    
+            # DESCRICAO_VERBA
+            elif cabecalho == 'DESCRICAO_VERBA':
+                if val_str.strip() == "":
+                    marcar_erro = True
+                    
+            # VALOR_VERBA
+            elif cabecalho == 'VALOR_VERBA':
+                if val_raw is None or val_real_excel == "":
+                    marcar_erro = True
+                elif isinstance(val_raw, (int, float)):
+                    marcar_erro = False
+                    texto_decimal = f"{float(val_raw):.10f}".rstrip('0').rstrip('.')
+                    parte_decimal = texto_decimal.split('.')[1] if '.' in texto_decimal else ''
+                    if len(parte_decimal) > 2:
+                        marcar_erro = True
+                    elif re.search(r'#,#{1,3}0', formato_da_celula):
+                        marcar_erro = True
+                else:
+                    val_cru_texto = str(val_raw).strip()
+                    if "/" in val_cru_texto or ":" in val_cru_texto:
+                        marcar_erro = True
+                    elif "." in val_cru_texto:
+                        marcar_erro = True
+                    elif not re.fullmatch(r"\d+(,\d{1,2})?", val_cru_texto):
+                        marcar_erro = True
+                        
+            # PERCENTUAL_VERBA
+            elif cabecalho == 'PERCENTUAL_VERBA':
+                if val_real_excel != "":
+                    if isinstance(val_raw, (int, float)):
+                        marcar_erro = False
+                    else:
+                        val_cru_texto = str(val_raw).strip()
+                        if '%' in val_cru_texto:
+                            marcar_erro = True
+                        elif '.' in val_cru_texto:
+                            if not (val_cru_texto.endswith('.0') and val_cru_texto.count('.') == 1):
+                                marcar_erro = True
+                        if not marcar_erro:
+                            txt_perc = val_cru_texto.replace('.0', '') if val_cru_texto.endswith('.0') else val_cru_texto
+                            txt_perc = txt_perc.replace('.', ',') if '.' in txt_perc else txt_perc
+                            if not re.fullmatch(r"\d+(,\d+)?", txt_perc):
+                                marcar_erro = True
+                                
+            # QUANTIDADE_REFERENCIA
+            elif cabecalho == 'QUANTIDADE_REFERENCIA':
+                if val_str != "":
+                    if "." in val_str:
+                        marcar_erro = True
+                    elif not re.fullmatch(r'-?\d+(?:,\d+)?', val_str):
+                        marcar_erro = True
+                        
+            # Outros
+            elif cabecalho == 'MES':
+                if not re.match(r'^\d{2}$', val_str):
+                    marcar_erro = True
+            elif cabecalho == 'TIPO_FOLHA':
+                if not re.match(r'^\d$', val_str):
+                    marcar_erro = True
+            elif cabecalho in ['QTDE_DEPENDENTES_IRRF', 'QTDE_DEPENDENTES_SF']:
+                if val_str != '0':
+                    marcar_erro = True
+            elif cabecalho == 'CODIGO_VERBA':
+                if not re.match(r'^\d{3}$', val_str):
+                    marcar_erro = True
+            elif cabecalho == 'NATUREZA_VERBA':
+                if not re.match(r'^\d$', val_str):
+                    marcar_erro = True
+            elif cabecalho in ['INCIDENCIA_INSS', 'INCIDENCIA_IRRF', 'INCIDENCIA_FGTS']:
+                if val_str != '0':
+                    marcar_erro = True
+                    
+            if marcar_erro:
+                if celula.fill != red_fill:
+                    celula.fill = red_fill
+                    celulas_pintadas += 1
+                celula.comment = Comment(
+                    f"Formato inválido para {cabecalho}. Verifique a regra desta coluna.",
+                    "Validador Webfopag"
+                )
+                
+    # 3. Pinta os avisos (amarelo)
+    if df_avisos is not None and not df_avisos.empty and 'CPF' in cabecalhos_excel:
+        idx_col_cpf = cabecalhos_excel['CPF']
+        for _, aviso in df_avisos.iterrows():
+            try:
+                num_linha_aviso = int(aviso.get('Linha Excel'))
+            except (ValueError, TypeError):
+                continue
+            if 2 <= num_linha_aviso <= ws.max_row:
+                celula_aviso = ws.cell(row=num_linha_aviso, column=idx_col_cpf)
+                if celula_aviso.fill != red_fill:
+                    celula_aviso.fill = yellow_fill
+                    celulas_pintadas += 1
+                if not celula_aviso.comment:
+                    celula_aviso.comment = Comment(str(aviso.get('Descrição', '')), "Validador Webfopag")
+                    
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue(), celulas_pintadas

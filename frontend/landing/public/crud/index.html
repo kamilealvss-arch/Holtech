@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAINEL ADMIN</title>
+  <link rel="stylesheet" href="/crud/style.css">
+  <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <span>Cadastro de Usuários</span>
+      <div style="display: flex; gap: 10px;">
+        <button onclick="acessarHoltech()" id="btnHoltech"
+          style="background-color: #053B9D; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Acessar
+          Holtech</button>
+        <button onclick="localStorage.removeItem('user'); window.location.href = '/login/';" id="btnLogout"
+          style="background-color: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Sair</button>
+        <button onclick="openModal()" id="new">Incluir</button>
+      </div>
+    </div>
+
+    <div class="divTable">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>E-mail</th>
+            <th>Senha</th>
+            <th class="acao">Editar</th>
+            <th class="acao">Excluir</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-container">
+      <div class="modal">
+        <form>
+          <label for="m-nme-usuario">Nome</label>
+          <input id="m-nme-usuario" type="text" required />
+
+          <label for="m-tpo-usuario">Tipo</label>
+          <input id="m-tpo-usuario" type="text" required />
+
+          <label for="m-eml-usuario">E-mail</label>
+          <input id="m-eml-usuario" type="email" required />
+
+          <label for="m-sha-usuario">Senha</label>
+          <input id="m-sha-usuario" type="password" required />
+
+          <button id="btnSalvar">Salvar</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+  <script src="/crud/style.js"></script>
+</body>
+
+</html>

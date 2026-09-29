@@ -1,0 +1,219 @@
+{
+  "usuarios": [
+    {
+      "id": 1,
+      "nome": "Administrador",
+      "email": "admin@holtech.com",
+      "senha": "123",
+      "perfil": "admin"
+    },
+    {
+      "id": 2,
+      "nome": "João Silva",
+      "email": "user@holtech.com",
+      "senha": "123",
+      "perfil": "user"
+    },
+    {
+      "id": 3,
+      "nome": "ale",
+      "email": "alexsandraarrais@bne.com.br",
+      "senha": "123",
+      "perfil": "user"
+    }
+  ],
+  "holerites": [
+    {
+      "id": 101,
+      "usuario_id": 2,
+      "mes_referencia": "07/2026",
+      "valor_liquido": 3500.0,
+      "arquivo_pdf": "holerite_julho_2026.pdf"
+    }
+  ],
+  "permissoes": [],
+  "historico": [
+    {
+      "Idf_Historico": 10,
+      "Dta_Auditoria": "2026-09-29T15:01:18.527341",
+      "Nme_Planilha": "holeritealfa (1).xlsx",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "ALERTA",
+      "Des_Json": {
+        "arquivos": {
+          "holerite": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\2\\20260929_150103\\holerite_holeritealfa1.xlsx",
+          "depara": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\2\\20260929_150103\\depara_CpiadeDe-paradeVerbas-TESTECOMERROS1.xlsx",
+          "funcionarios": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\2\\20260929_150103\\func_funcionriosalfa1.xlsx",
+          "auditado": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\2\\20260929_150103\\AUDITADO_holeritealfa1.xlsx"
+        },
+        "avisos": 12,
+        "total_erros": 297
+      },
+      "Idf_Usuario": 2,
+      "Idf_Permissao": null,
+      "Nme_Usuario": "João Silva"
+    },
+    {
+      "Idf_Historico": 9,
+      "Dta_Auditoria": "2026-09-29T14:38:26.327465",
+      "Nme_Planilha": "holeritealfa (1).xlsx",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "ALERTA",
+      "Des_Json": {
+        "arquivos": {
+          "holerite": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\2\\20260929_143812\\holerite_holeritealfa1.xlsx",
+          "depara": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\2\\20260929_143812\\depara_CpiadeDe-paradeVerbas-TESTECOMERROS1.xlsx",
+          "funcionarios": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\2\\20260929_143812\\func_funcionriosalfa1.xlsx",
+          "auditado": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\2\\20260929_143812\\AUDITADO_holeritealfa1.xlsx"
+        },
+        "avisos": 12,
+        "total_erros": 299
+      },
+      "Idf_Usuario": 2,
+      "Idf_Permissao": null,
+      "Nme_Usuario": "João Silva"
+    },
+    {
+      "Idf_Historico": 8,
+      "Dta_Auditoria": "2026-09-28T17:40:45.475550",
+      "Nme_Planilha": "holeritealfa (1).xlsx",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "ALERTA",
+      "Des_Json": {
+        "arquivos": {
+          "holerite": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_174029\\holerite_holeritealfa1.xlsx",
+          "depara": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_174029\\depara_CpiadeDe-paradeVerbas-TESTECOMERROS1.xlsx",
+          "funcionarios": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_174029\\func_funcionriosalfa1.xlsx",
+          "auditado": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_174029\\AUDITADO_holeritealfa1.xlsx"
+        },
+        "avisos": 12,
+        "total_erros": 299
+      },
+      "Idf_Usuario": 1,
+      "Idf_Permissao": null,
+      "Nme_Usuario": "Administrador"
+    },
+    {
+      "Idf_Historico": 7,
+      "Dta_Auditoria": "2026-09-28T17:36:12.659240",
+      "Nme_Planilha": "holeritealfa (1).xlsx",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "ALERTA",
+      "Des_Json": {
+        "arquivos": {
+          "holerite": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_173559\\holerite_holeritealfa1.xlsx",
+          "depara": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_173559\\depara_CpiadeDe-paradeVerbas-TESTECOMERROS1.xlsx",
+          "funcionarios": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_173559\\func_funcionriosalfa1.xlsx",
+          "auditado": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_173559\\AUDITADO_holeritealfa1.xlsx"
+        },
+        "avisos": 12,
+        "total_erros": 298
+      },
+      "Idf_Usuario": 1,
+      "Idf_Permissao": null,
+      "Nme_Usuario": "Administrador"
+    },
+    {
+      "Idf_Historico": 6,
+      "Dta_Auditoria": "2026-09-28T17:30:50.017248",
+      "Nme_Planilha": "holeritealfa (1).xlsx",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "ALERTA",
+      "Des_Json": {
+        "arquivos": {
+          "holerite": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_173035\\holerite_holeritealfa1.xlsx",
+          "depara": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_173035\\depara_CpiadeDe-paradeVerbas-TESTECOMERROS1.xlsx",
+          "funcionarios": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_173035\\func_funcionriosalfa1.xlsx",
+          "auditado": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_173035\\AUDITADO_holeritealfa1.xlsx"
+        },
+        "avisos": 12,
+        "total_erros": 295
+      },
+      "Idf_Usuario": 1,
+      "Idf_Permissao": null,
+      "Nme_Usuario": "Administrador"
+    },
+    {
+      "Idf_Historico": 5,
+      "Dta_Auditoria": "2026-09-28T17:16:24.871569",
+      "Nme_Planilha": "holeritealfa (1).xlsx",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "ALERTA",
+      "Des_Json": {
+        "arquivos": {
+          "holerite": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_171611\\holerite_holeritealfa1.xlsx",
+          "depara": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_171611\\depara_CpiadeDe-paradeVerbas-TESTECOMERROS1.xlsx",
+          "funcionarios": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_171611\\func_funcionriosalfa1.xlsx",
+          "auditado": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_171611\\AUDITADO_holeritealfa1.xlsx"
+        },
+        "avisos": 12,
+        "total_erros": 295
+      },
+      "Idf_Usuario": 1,
+      "Idf_Permissao": null,
+      "Nme_Usuario": "Administrador"
+    },
+    {
+      "Idf_Historico": 4,
+      "Dta_Auditoria": "2026-09-28T17:13:51.465925",
+      "Nme_Planilha": "holeritealfa (1).xlsx",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "ALERTA",
+      "Des_Json": {
+        "arquivos": {
+          "holerite": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_171337\\holerite_holeritealfa1.xlsx",
+          "depara": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_171337\\depara_CpiadeDe-paradeVerbas-TESTECOMERROS1.xlsx",
+          "funcionarios": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_171337\\func_funcionriosalfa1.xlsx",
+          "auditado": "C:\\Users\\kamilesilva\\Downloads\\HOLTECH\\HOLTECH\\backend\\uploads\\1\\20260928_171337\\AUDITADO_holeritealfa1.xlsx"
+        },
+        "avisos": 12,
+        "total_erros": 295
+      },
+      "Idf_Usuario": 1,
+      "Idf_Permissao": null,
+      "Nme_Usuario": "Administrador"
+    },
+    {
+      "Idf_Historico": 3,
+      "Dta_Auditoria": "2026-08-10T17:33:47.890318",
+      "Nme_Planilha": "GESTAO_USUARIOS",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "SUCESSO",
+      "Des_Json": {
+        "acao": "CRIAR_USUARIO",
+        "usuario_id": 3,
+        "usuario_email": "alexsandraarrais@bne.com.br"
+      },
+      "Idf_Usuario": 1,
+      "Nme_Usuario": "Administrador"
+    },
+    {
+      "Idf_Historico": 2,
+      "Dta_Auditoria": "2026-08-10T17:17:26.776150",
+      "Nme_Planilha": "GESTAO_USUARIOS",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "SUCESSO",
+      "Des_Json": {
+        "acao": "EXCLUIR_USUARIO",
+        "usuario_id": 3,
+        "usuario_email": "adminteste@holtech.com"
+      },
+      "Idf_Usuario": 1,
+      "Nme_Usuario": "Administrador"
+    },
+    {
+      "Idf_Historico": 1,
+      "Dta_Auditoria": "2026-08-10T17:17:26.773126",
+      "Nme_Planilha": "GESTAO_USUARIOS",
+      "Cod_Erro": null,
+      "Stu_Auditoria": "SUCESSO",
+      "Des_Json": {
+        "acao": "CRIAR_USUARIO",
+        "usuario_id": 3,
+        "usuario_email": "adminteste@holtech.com"
+      },
+      "Idf_Usuario": 1,
+      "Nme_Usuario": "Administrador"
+    }
+  ]
+}

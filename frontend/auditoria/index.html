@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holtech | Auditoria de Holerites</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- NAVBAR SUPERIOR -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <div class="brand-logo-circle">H</div>
+      <div class="brand-titles">
+        <span class="brand-name">HOLTECH</span>
+        <span class="brand-sub">Sistema de Auditoria</span>
+      </div>
+    </div>
+
+    <div class="nav-user">
+      <div class="user-info">
+        <span class="user-name" id="userName">Usuário</span>
+        <span class="user-badge" id="userBadge">user</span>
+      </div>
+      <a href="/crud/" class="btn-nav btn-admin" id="btnAdmin" style="display: none;">
+        <i class='bx bx-user-check'></i> Gerenciar Usuários
+      </a>
+      <button class="btn-nav btn-logout" id="btnLogout" title="Sair do sistema">
+        <i class='bx bx-log-out'></i> Sair
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTAINER PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- HERO HEADER -->
+    <div class="hero-header">
+      <span class="eyebrow">AUDITORIA E CONCILIAÇÃO DE FOLHA</span>
+      <h1>Validação de Holerites</h1>
+      <p>Envie as planilhas para cruzamento automático de verbas, formato de documentos e base de colaboradores.</p>
+    </div>
+
+    <!-- NAVEGAÇÃO POR ABAS -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" data-tab="tab-auditoria">
+        <i class='bx bx-file-find'></i> Nova Auditoria
+      </button>
+      <button class="tab-btn" data-tab="tab-historico" id="tabHistoricoBtn">
+        <i class='bx bx-history'></i> Histórico de Auditorias
+      </button>
+    </div>
+
+    <!-- ABA 1: AUDITORIA -->
+    <section class="tab-content active" id="tab-auditoria">
+      
+      <!-- CARDS DE UPLOAD -->
+      <div class="upload-grid">
+        <!-- 1. Holerites -->
+        <div class="upload-card" id="drop-holerite">
+          <div class="card-step">01</div>
+          <div class="card-icon"><i class='bx bx-spreadsheet'></i></div>
+          <h3>Arquivo de Holerites</h3>
+          <p>Planilha contendo os eventos, verbas e valores da folha (`.xlsx`, `.xls`, `.csv`).</p>
+          <input type="file" id="file-holerite" accept=".xlsx,.xls,.csv" class="file-input">
+          <div class="file-status" id="status-holerite">
+            <span class="btn-select">Selecionar Arquivo</span>
+          </div>
+        </div>
+
+        <!-- 2. De-Para -->
+        <div class="upload-card" id="drop-depara">
+          <div class="card-step">02</div>
+          <div class="card-icon"><i class='bx bx-transfer-alt'></i></div>
+          <h3>Arquivo De-Para</h3>
+          <p>Tabela de mapeamento dos códigos de verbas do cliente para os códigos internos.</p>
+          <input type="file" id="file-depara" accept=".xlsx,.xls,.csv" class="file-input">
+          <div class="file-status" id="status-depara">
+            <span class="btn-select">Selecionar Arquivo</span>
+          </div>
+        </div>
+
+        <!-- 3. Funcionários -->
+        <div class="upload-card" id="drop-func">
+          <div class="card-step">03</div>
+          <div class="card-icon"><i class='bx bx-group'></i></div>
+          <h3>Relatório de Funcionários</h3>
+          <p>Base cadastral ativa dos colaboradores com CPF, Matrícula, CNPJ e Admissão.</p>
+          <input type="file" id="file-func" accept=".xlsx,.xls,.csv" class="file-input">
+          <div class="file-status" id="status-func">
+            <span class="btn-select">Selecionar Arquivo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTÃO DE EXECUÇÃO -->
+      <div class="action-bar">
+        <button class="btn-primary" id="btnExecutarAuditoria" disabled>
+          <i class='bx bx-play-circle'></i> Executar Auditoria de Dados
+        </button>
+      </div>
+
+      <!-- SPINNER DE CARREGAMENTO -->
+      <div class="loading-state" id="loadingState" style="display: none;">
+        <div class="spinner"></div>
+        <h4>Analisando e cruzando registros...</h4>
+        <p>Avaliando formatação de CPFs, CNPJs alfanuméricos, De-Para de verbas e inconsistências cadastrais.</p>
+      </div>
+
+      <!-- RESULTADOS DA AUDITORIA -->
+      <div class="results-container" id="resultsContainer" style="display: none;">
+        
+        <!-- BANNER DE STATUS -->
+        <div class="status-banner" id="statusBanner">
+          <div class="banner-icon" id="bannerIcon"></div>
+          <div class="banner-text">
+            <h3 id="bannerTitle">Auditoria Concluída</h3>
+            <p id="bannerDesc">Detalhes do processamento</p>
+          </div>
+          <div class="banner-action" id="bannerAction" style="display: none;">
+            <button class="btn-download" id="btnDownloadAuditado">
+              <i class='bx bx-download'></i> Baixar Holerite Auditado (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <!-- CARDS DE KPIS POR TIPO DE ERRO -->
+        <div class="kpi-section" id="kpiSection" style="display: none;">
+          <h3>Indicadores de Inconsistências</h3>
+          <div class="kpi-grid" id="kpiGrid"></div>
+        </div>
+
+        <!-- TABELA DE DESVIOS DETALHADOS -->
+        <div class="table-section" id="tableSection" style="display: none;">
+          <div class="table-header">
+            <h3>Registro Analítico de Inconsistências</h3>
+            <div class="table-controls">
+              <input type="text" id="filtroTabela" placeholder="Buscar por CPF, tipo de erro..." class="search-input">
+              <button class="btn-secondary" id="btnExportarCsv">
+                <i class='bx bx-export'></i> Exportar CSV
+              </button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table id="tabelaErros">
+              <thead>
+                <tr>
+                  <th>Planilha</th>
+                  <th>Linha Excel</th>
+                  <th>Identificador</th>
+                  <th>Tipo de Inconsistência</th>
+                  <th>Descrição Detalhada</th>
+                </tr>
+              </thead>
+              <tbody id="corpoTabelaErros"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ABA 2: HISTÓRICO -->
+    <section class="tab-content" id="tab-historico">
+      <div class="historico-header">
+        <div>
+          <h2>Histórico de Auditorias</h2>
+          <p>Consulte execuções anteriores e baixe os arquivos originais e auditados.</p>
+        </div>
+        <button class="btn-secondary" id="btnRecarregarHistorico">
+          <i class='bx bx-refresh'></i> Atualizar
+        </button>
+      </div>
+
+      <div class="historico-list" id="historicoList">
+        <div class="empty-state">Carregando histórico...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Login do Holerite Claro" />
+    <title>Holtech | Entrar</title>
+    <link rel="stylesheet" href="/login/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="intro" aria-label="Apresentação">
+        <div class="intro-copy">
+          <p class="eyebrow">Sua folha, sem dúvidas</p>
+          <h1>Encontre erros no seu holerite antes que eles virem problema.</h1>
+          <p>Valide registros, identifique inconsistências e gere sua planilha auditada em segundos. A Holtec organiza o processo de auditoria e traz a segurança que sua empresa precisa.</p>
+          <div class="benefits">
+            <div class="benefit"><span class="check">✓</span> Análise clara, item por item</div>
+            <div class="benefit"><span class="check">✓</span> Alertas sobre possíveis inconsistências</div>
+            <div class="benefit"><span class="check">✓</span> Seus dados protegidos e privados</div>
+          </div>
+        </div>
+        
+      </section>
+
+      <section class="login">
+        <div class="card">
+          <div class="login-brand" style="display: flex; justify-content: center;">
+            <img class="login-logo"
+            src="/login/logo2.png" alt="Holtech Solução Rápida" width="500" height="100" >
+          </div>
+          <h2>Bem-vindo </h2>
+          <p class="subtitle">Entre para conferir seus holerites com tranquilidade.</p>
+          <form id="loginForm">
+            <label>E-mail
+              <input id="email" type="email" placeholder="usuario@bne.com.br" required />
+            </label>
+            <label>Senha
+              <span class="input-wrap">
+                <input id="password" type="password" placeholder="Digite sua senha" required />
+                <button class="password-toggle" type="button" onclick="const input=document.getElementById('password'); input.type=input.type==='password'?'text':'password'; this.textContent=input.type==='password'?'Mostrar':'Ocultar';">Mostrar</button>
+              </span>
+            </label>
+            <div class="form-row">
+              <label class="remember"><input type="checkbox" /> Lembrar de mim</label>
+              <a href="#">Esqueci minha senha</a>
+            </div>
+            <button class="submit" type="submit">Entrar na minha conta</button>
+          </form>
+          
+      </section>
+    </main>
+    <script src="/login/login.js"></script>
+  </body>
+</html>
